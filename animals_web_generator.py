@@ -1,37 +1,56 @@
 import json
 
 def load_data(file_path):
-    """Loads a JSON file"""
+    """Loads a JSON file."""
     with open(file_path, "r") as handle:
         return json.load(handle)
 
-def generate_animal_cards(animals_data):
-    """Generates HTML for animal cards"""
-    cards_html = ""
+def generate_animal_info(animals_data):
+    """Generates a string with the animals' data."""
+    output = ''
     for animal in animals_data:
-        card_html = f"""
-        <li class="cards__item">
-            <div class="card__title">{animal.get("Name", "")}</div>
-            <div class="card__text">Diet: {animal.get("Diet", "")}</div>
-            <div class="card__text">Location: {animal.get("Locations", [""])[0]}</div>
-            <div class="card__text">Type: {animal.get("Type", "")}</div>
-        </li>
-        """
-        cards_html += card_html
-    return cards_html
+        output += '<li class="cards__item">'
+        if 'name' in animal:
+            output += f"<div class='card__title'>{animal['name']}</div>"
+        output += "<p class='card__text'><ul>"
+        if 'characteristics' in animal:
+            if 'diet' in animal['characteristics']:
+                output += f"<li>Diet: {animal['characteristics']['diet']}</li>"
+            if 'type' in animal['characteristics']:
+                output += f"<li>Type: {animal['characteristics']['type']}</li>"
+        if 'locations' in animal and len(animal['locations']) > 0:
+            output += f"<li>Location: {animal['locations'][0]}</li>"
+        output += "</ul></p></li>"
+    return output
 
-# Load data from JSON file
-animals_data = load_data('animals_data.json')
+def replace_placeholder(template_content, animal_info):
+    """Replaces the placeholder in the template with the animal info."""
+    return template_content.replace('__REPLACE_ANIMALS_INFO__', animal_info)
 
-# Generate HTML for animal cards
-animal_cards_html = generate_animal_cards(animals_data)
+def read_template(file_path):
+    """Reads the HTML template file."""
+    with open(file_path, "r") as file:
+        return file.read()
 
-# Read HTML template from file
-with open('animals_template.html', 'r') as f:
-    html_template = f.read()
+def write_html(file_path, content):
+    """Writes the content to an HTML file."""
+    with open(file_path, "w") as file:
+        file.write(content)
 
-# Replace __REPLACE_ANIMALS_INFO__ in the HTML template with the generated animal cards HTML
-final_html = html_template.replace("__REPLACE_ANIMALS_INFO__", animal_cards_html)
+if __name__ == "__main__":
+    # Load the data from the JSON file
+    animals_data = load_data('animals_data.json')
 
-# Output the final HTML content
-print(final_html)
+    # Generate the animal information string
+    animal_info = generate_animal_info(animals_data)
+
+    # Read the HTML template content
+    template_content = read_template('animals_template.html')
+
+    # Replace the placeholder with the animal info
+    new_html_content = replace_placeholder(template_content, animal_info)
+
+    # Write the new HTML content to a file
+    write_html('animals.html', new_html_content)
+
+    print("HTML file generated: animals.html")
